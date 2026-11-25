@@ -75,3 +75,53 @@ See the [dynamic variant](../fiware-app-dynamic/README.md) for the alternative m
 ## Development approach
 
 All custom adaptations and additions in this project were created through **vibe coding with OpenAI Codex**, guided through prompts, feedback, and iteration. Upstream code, bundled frameworks, generated scaffolding, and dependencies retain their original authorship and licenses. See the [repository overview](../README.md).
+
+## TO DO: Update FIWARE data from ArcGIS
+
+**Status: proposed workflow — not implemented in this project.**
+
+The current provider reads data from FIWARE into ArcGIS. The following figure, recreated from the proposed architecture, shows the **reverse direction: moving updated geometry from ArcGIS to FIWARE**.
+
+```mermaid
+flowchart TB
+    subgraph arcgis["ARCGIS SYSTEM"]
+        editor["GEOMETRY EDITING APPLICATION"]
+        subgraph backend["BACKEND"]
+            server["ARCGIS SERVER"]
+            webhook["Webhooks"]
+            server --- webhook
+        end
+        editor -->|"GeoJSON / geometry edits"| server
+    end
+
+    subgraph automation["INTEGRATION AUTOMATION"]
+        handler["NOTEBOOK SERVER<br/>AZURE FUNCTIONS<br/>POWER AUTOMATE"]
+    end
+
+    subgraph fiware["FIWARE"]
+        agent["IoT AGENT"]
+        orion["ORION CONTEXT BROKER"]
+        agent --> orion
+    end
+
+    webhook -->|"Edit notification"| handler
+    handler -->|"HTTP / GeoJSON<br/>Updated geometry"| agent
+
+    classDef component fill:#00afe3,stroke:#00afe3,color:#fff
+    classDef event fill:#00b050,stroke:#00b050,color:#fff
+    class editor,server,handler,agent,orion component
+    class webhook event
+    style arcgis fill:#fff,stroke:#00afe3,stroke-width:2px
+    style backend fill:#fff,stroke:#bdbdbd,stroke-width:2px
+    style automation fill:#fff,stroke:#00afe3,stroke-width:2px,stroke-dasharray:6 4
+    style fiware fill:#fff,stroke:#00afe3,stroke-width:2px
+```
+
+The intended flow is for a geometry edit in ArcGIS to trigger a webhook, then for an automation component to obtain the updated geometry and send it to FIWARE through an IoT Agent, updating the corresponding entity in Orion Context Broker. Notebook Server, Azure Functions, and Power Automate represent alternative automation options.
+
+- [ ] Configure edit notifications for the ArcGIS feature service.
+- [ ] Implement the webhook handler and retrieval of the edited geometry.
+- [ ] Define the mapping between ArcGIS feature IDs and FIWARE entity IDs.
+- [ ] Validate the chosen IoT Agent's HTTP payload contract and convert geometry into its required format.
+- [ ] Implement authenticated updates, retry handling, and duplicate-event protection.
+- [ ] Verify that an ArcGIS geometry edit updates the intended entity in Orion.
