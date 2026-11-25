@@ -2,11 +2,13 @@
 
 ArcGIS Enterprise Custom Data Feeds (CDF) application that exposes Databricks data through a FeatureServer. The application and provider manifests target ArcGIS version **12.1.0**.
 
-This project is based on [anandtrivedi/esri-customdatafeed](https://github.com/anandtrivedi/esri-customdatafeed). The original repository provides the foundation for the adaptations and extensions presented here.
+## Credits
+
+This project builds on [anandtrivedi/esri-customdatafeed](https://github.com/anandtrivedi/esri-customdatafeed). Credit goes to Anand Trivedi and the upstream contributors for the original foundation. This folder contains adaptations and extensions of that work; upstream code retains its original authorship and licenses.
 
 ## Architecture portfolio and development approach
 
-**All custom code in this project is produced through vibe coding with OpenAI Codex.** My contribution is defining the goals, guiding architecture and integration decisions, and steering the implementation through prompts, feedback, and iteration. Codex generates the implementation under that direction. Bundled framework code and third-party dependencies retain their original authorship and licenses.
+**All custom adaptations and additions developed for this project were produced through vibe coding with OpenAI Codex.** My contribution is defining the goals, guiding architecture and integration decisions, and steering the implementation through prompts, feedback, and iteration. Codex generates the implementation under that direction. This attribution does not apply to upstream code, bundled frameworks, or third-party dependencies, which retain their original authorship and licenses.
 
 This project showcases several concrete architecture choices:
 
