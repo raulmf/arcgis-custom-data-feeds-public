@@ -1,0 +1,154 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>::Integración con DuckDB::</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/dark/main.css" />
+    <script src="https://js.arcgis.com/4.30/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      #filterPanel {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(30, 30, 30, 0.9);
+        padding: 10px;
+        color: white;
+        z-index: 99;
+        font-family: sans-serif;
+        border-radius: 6px;
+      }
+
+      #pickupInput,
+      #passengerInput {
+        width: 200px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+      }
+
+      #countDisplay {
+        margin-top: 8px;
+        font-weight: bold;
+        color: #a0e0ff;
+      }
+    </style>
+
+    <script>
+      require(["esri/Map", "esri/views/MapView", "esri/layers/FeatureLayer"], (Map, MapView, FeatureLayer) => {
+        const map = new Map({
+          basemap: "streets-night-vector"
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          extent: {
+            xmin: -74.351349,
+            ymin: 40.393608,
+            xmax: -72.880554,
+            ymax: 41.331241,
+            spatialReference: 4326
+          }
+        });
+
+        const featureLayer = new FeatureLayer({
+          url: "http://127.0.0.1:8080/duckdb-provider/rest/services/localParquet/FeatureServer/0",
+          popupTemplate: {
+            title: "Feature Information",
+            content: [
+              {
+                type: "fields",
+                fieldInfos: [                 
+                  { fieldName: "passenger_count", label: "NÚMERO DE PASAJEROS" },
+                  { fieldName: "trip_distance", label: "DISTANCIA DEL VIAJE" },
+                  { fieldName: "tpep_pickup_datetime", label: "HORA DE RECOGIDA" },
+                  { fieldName: "tpep_dropoff_datetime", label: "HORA DE BAJADA" },
+                  { fieldName: "fare_amount", label: "TARIFA" }
+                ]
+              }
+            ]
+          }
+        });
+
+        map.add(featureLayer);
+
+        view.on("click", (event) => {
+          view.hitTest(event).then((response) => {
+            const results = response.results;
+            if (results.length > 0) {
+              const graphic = results.filter((result) => result.graphic.layer === featureLayer)[0]?.graphic;
+              if (graphic) {
+                view.popup.open({
+                  location: event.mapPoint,
+                  features: [graphic]
+                });
+              }
+            }
+          });
+        });
+
+        const updateFeatureCount = async () => {
+          try {
+            const count = await featureLayer.queryFeatureCount();
+            // Format count with thousand separators
+            document.getElementById("countDisplay").innerText = `Coincidencias: ${count.toLocaleString()}`;
+          } catch (err) {
+            console.error("Error counting features:", err);
+            document.getElementById("countDisplay").innerText = "Error al contar los resultados.";
+          }
+        };
+
+        document.getElementById("filterBtn").addEventListener("click", () => {
+          const pickupValue = document.getElementById("pickupInput").value.trim();
+          const passengerValue = document.getElementById("passengerInput").value.trim();
+
+          let definition = "";
+
+          // Filter by pickup time (string match)
+          if (pickupValue !== "") {
+            definition = `tpep_pickup_datetime LIKE '${pickupValue}%'`;
+          }
+
+          // Filter by passenger count (exact string match)
+          if (passengerValue !== "") {
+            if (definition) {
+              definition += ` AND passenger_count = '${passengerValue}'`;
+            } else {
+              definition = `passenger_count = '${passengerValue}'`;
+            }
+          }
+
+          featureLayer.definitionExpression = definition || null;
+          updateFeatureCount();
+        });
+
+        // Initial count
+        featureLayer.when(() => updateFeatureCount());
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+    <div id="filterPanel">
+      <label for="pickupInput">HORA DE RECOGIDA:</label><br />
+      <input type="text" id="pickupInput" value="2016-01-01 11:30" />
+      <br />
+      <label for="passengerInput">NÚMERO DE PASAJEROS:</label><br />
+      <input type="text" id="passengerInput" value="2" />
+      <br />
+      <button id="filterBtn">Filtrar</button>
+      <div id="countDisplay">Cargando...</div>
+    </div>
+  </body>
+</html>

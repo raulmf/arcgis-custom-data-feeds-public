@@ -1,0 +1,39 @@
+{
+  "name": "output-geoservices",
+  "version": "12.1.0",
+  "description": "Wraps FeatureServer as an output plugin",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest --silent",
+    "cov:unit:json": "npm test -- --coverage --coverageDirectory=.coverage/all --silent > /dev/null"
+  },
+  "contributors": [
+    {
+      "name": "Rich Gwozdz",
+      "email": "rgwozdz@esri.com"
+    },
+    {
+      "name": "Daniel Fenton"
+    }
+  ],
+  "license": "Apache-2.0",
+  "files": [
+    "src/**/*.js",
+    "index.d.ts",
+    "!**/*.spec.js"
+  ],
+  "dependencies": {
+    "lodash": "^4.17.23"
+  },
+  "jest": {
+    "coverageProvider": "v8",
+    "coverageDirectory": ".coverage",
+    "coverageReporters": [
+      "json",
+      "json-summary"
+    ],
+    "testMatch": [
+      "<rootDir>/src/**/*.spec.[jt]s?(x)"
+    ]
+  }
+}

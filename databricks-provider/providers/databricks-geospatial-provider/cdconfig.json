@@ -1,0 +1,118 @@
+{
+  "name": "databricks-geospatial-provider",
+  "arcgisVersion": "12.1.0",
+  "parentServiceType": "FeatureServer",
+  "customdataRuntimeVersion": "1",
+  "type": "provider",
+  "editingEnabled": true,
+  "properties": {
+    "serviceParameters": [
+      {
+        "key": "workspace",
+        "label": "Databricks Workspace Profile",
+        "description": "Profile name from .databrickscfg (e.g. 'WORKSPACE_A'). Optional — falls back to env-var-based default. Determines which Databricks workspace this service connects to."
+      },
+      {
+        "key": "warehouseHttpPath",
+        "label": "SQL Warehouse HTTP Path",
+        "description": "Databricks SQL Warehouse HTTP path (e.g. /sql/1.0/warehouses/abc123). Lakehouse services only. Optional — defaults to DATABRICKS_HTTP_PATH env var."
+      },
+      {
+        "key": "tableName",
+        "label": "Table Name",
+        "description": "Fully qualified Databricks table name (catalog.schema.table). Used for read-only services."
+      },
+      {
+        "key": "geometryColumn",
+        "label": "Geometry Column",
+        "description": "Name of the geometry column in the table"
+      },
+      {
+        "key": "idField",
+        "label": "ID Field",
+        "description": "Name of the unique identifier field (optional, defaults to 'id')"
+      },
+      {
+        "key": "geometryFormat",
+        "label": "Geometry Format",
+        "description": "Storage format of the geometry column: WKT, WKT_DECIMAL_COMMA, WKB, GEOJSON, or GEOMETRY (optional, auto-detected from column name if not set)"
+      },
+      {
+        "key": "timeColumn",
+        "label": "Time Column",
+        "description": "Name of the timestamp column for time filtering (optional)"
+      },
+      {
+        "key": "lakebaseHost",
+        "label": "Lakebase Host",
+        "description": "Lakebase (PostgreSQL) hostname. When set, routes reads and writes through Lakebase for editing support."
+      },
+      {
+        "key": "lakebasePort",
+        "label": "Lakebase Port",
+        "description": "Lakebase port (default: 5432)"
+      },
+      {
+        "key": "lakebaseDatabase",
+        "label": "Lakebase Database",
+        "description": "Lakebase database name"
+      },
+      {
+        "key": "lakebaseSchema",
+        "label": "Lakebase Schema",
+        "description": "PostgreSQL schema in Lakebase (default: public)"
+      },
+      {
+        "key": "lakebaseTable",
+        "label": "Lakebase Table",
+        "description": "Table name in Lakebase for reads and writes"
+      },
+      {
+        "key": "maxRecordCount",
+        "label": "Max Record Count",
+        "description": "Maximum features returned per page (default: 2000). Clients can request fewer via resultRecordCount."
+      },
+      {
+        "key": "enableGeometryGeneralization",
+        "label": "Enable Geometry Generalization",
+        "description": "Set to 'true' to allow ArcGIS query maxAllowableOffset or quantizationParameters.tolerance to simplify returned geometries. Set to 'false' to always return full geometry."
+      },
+      {
+        "key": "minGeneralizationTolerance",
+        "label": "Minimum Generalization Tolerance",
+        "description": "Optional non-negative lower bound for geometry simplification tolerance. Leave empty or set to 0 to avoid forced simplification when zoomed in."
+      },
+      {
+        "key": "maxGeneralizationTolerance",
+        "label": "Maximum Generalization Tolerance",
+        "description": "Optional positive upper bound for geometry simplification tolerance. Recommended for complex polygon services to avoid over-generalized geometry at small scales."
+      },
+      {
+        "key": "queryCacheEnabled",
+        "label": "Enable Query Cache",
+        "description": "Set to 'true' to cache identical Lakehouse query responses in provider memory. Useful for mostly static reference layers and repeated tile-like map requests."
+      },
+      {
+        "key": "queryCacheTtlSeconds",
+        "label": "Query Cache TTL Seconds",
+        "description": "How long cached query responses remain valid, in seconds. Default: 300."
+      },
+      {
+        "key": "queryCacheMaxEntries",
+        "label": "Query Cache Max Entries",
+        "description": "Maximum number of cached query responses kept in provider memory. Default: 500."
+      },
+      {
+        "key": "srid",
+        "label": "Spatial Reference ID",
+        "description": "EPSG SRID of the geometry column (default: 4326 / WGS 84)"
+      },
+      {
+        "key": "editingEnabled",
+        "label": "Editing Enabled",
+        "description": "Set to 'true' to enable feature editing via applyEdits (Lakebase only). Also requires capabilities: 'Query,Editing' on the service."
+      }
+    ]
+  },
+  "fileName": "databricks-geospatial-provider.cdpk"
+}

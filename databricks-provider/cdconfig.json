@@ -1,0 +1,5 @@
+{
+  "name": "databricks-provider",
+  "type": "app",
+  "arcgisVersion": "12.1.0"
+}

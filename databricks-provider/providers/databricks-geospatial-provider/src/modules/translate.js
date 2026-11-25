@@ -1,0 +1,70 @@
+/**
+ * translate.js
+ * Converts Databricks query results to GeoJSON format
+ */
+
+function translateToGeoJSON(data, config) {
+  if (!data || data.length === 0) {
+    return {
+      type: "FeatureCollection",
+      features: []
+    };
+  }
+
+  const columns = Object.keys(data[0]);
+  return {
+    type: "FeatureCollection",
+    features: data.map((row) =>
+      formatFeature(row, columns, config.idField, config.geometryColumn)
+    ),
+  };
+}
+
+function matchesConfiguredField(actualName, configuredName) {
+  return actualName.toLowerCase() === configuredName.toLowerCase();
+}
+
+function formatFeature(values, columns, idField, geometryField) {
+  let feature = {
+    type: "Feature",
+    properties: {},
+    geometry: {},
+  };
+
+  for (let i = 0; i < columns.length; i++) {
+    const columnName = columns[i];
+    const value = values[columnName];
+
+    if (matchesConfiguredField(columnName, geometryField)) {
+      // Parse GeoJSON geometry from ST_AsGeoJSON result
+      try {
+        feature.geometry = JSON.parse(value);
+      } catch (error) {
+        console.error(`Failed to parse geometry for ${idField}:`, error);
+        feature.geometry = null;
+      }
+    } else if (matchesConfiguredField(columnName, idField)) {
+      // Cast to integer — Databricks returns BIGINT as strings/BigInts,
+      // but CDF runtime requires safe integers for OBJECTID recognition
+      const intValue = Number(value);
+      if (!isValidId(intValue)) {
+        console.warn(`Invalid ID value: ${value}`);
+      }
+      feature.properties[idField] = intValue;
+    } else {
+      feature.properties[columnName] = value;
+    }
+  }
+  return feature;
+}
+
+// Max ID value supported by feature server:
+// https://koopjs.github.io/docs/usage/provider#setting-provider-metadata-in-getdata
+function isValidId(value) {
+  const parsedValue = parseInt(value);
+  return 0 <= parsedValue && parsedValue <= 2147483647;
+}
+
+module.exports = {
+  translateToGeoJSON,
+};

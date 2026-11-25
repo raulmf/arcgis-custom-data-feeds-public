@@ -1,0 +1,19 @@
+{
+    "duckdb": {
+      "sources": {
+        "localParquet": {
+          "path": "c:/cdf/duckdb-binning/providers/duckdb-provider/data/taxi.parquet",
+          "WKBColumn": "WKB",
+          "geomOutColumn": "geometry",
+          "idField": "OBJECTID",
+          "dbWKID": 4326,
+          "maxRecordCountPerPage": 10000,
+          "properties": {
+            "name": "fullNYTaxi",
+            "description": "ten million NY Taxi points"
+          }
+        }
+      }
+    }
+  }
+  

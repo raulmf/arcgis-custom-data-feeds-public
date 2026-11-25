@@ -1,0 +1,12 @@
+{
+  "name": "fiware",
+  "arcgisVersion": "11.1.0",
+  "parentServiceType": "FeatureServer",
+  "customdataRuntimeVersion": "1",
+  "type": "provider",
+  "properties": {
+    "hosts": false,
+    "disableIdParam": true
+  },
+  "fileName": "fiware.cdpk"
+}

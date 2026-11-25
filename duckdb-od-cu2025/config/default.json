@@ -1,0 +1,19 @@
+{
+  "port": 8082,
+  "duckdb": {
+    "sources": {
+      "localParquet": {
+        "path": "C:/cdf/duckdb-od-cu2025/data/parquet/porto_taxi_data.parquet",
+        "WKBColumn": "WKB",
+        "geomOutColumn": "geometry",
+        "idField": "OBJECTID",
+        "dbWKID": 4326,
+        "maxRecordCountPerPage": 10000,
+        "properties": {
+          "name": "TaxiOporto",
+          "description": "1.6 millones de viajes en taxi en Oporto"
+        }
+      }
+    }
+  }
+}

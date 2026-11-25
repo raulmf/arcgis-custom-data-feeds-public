@@ -1,0 +1,21 @@
+[
+  {
+    "id": "default",
+    "label": "Example Databricks workspace",
+    "host": "workspace.example.com",
+    "tokenEnv": "DATABRICKS_DEFAULT_TOKEN",
+    "warehouses": [
+      {
+        "id": "main",
+        "name": "Main SQL Warehouse",
+        "httpPath": "/sql/1.0/warehouses/0000000000000000"
+      }
+    ],
+    "lakebase": {
+      "host": "",
+      "port": "5432",
+      "database": "",
+      "schema": ""
+    }
+  }
+]

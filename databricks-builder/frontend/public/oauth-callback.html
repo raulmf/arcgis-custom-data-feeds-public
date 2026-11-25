@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ArcGIS OAuth Callback</title>
+  </head>
+  <body>
+    <script>
+      const target = window.opener || window.parent;
+      if (target && window.location.hash) {
+        target.dispatchEvent(new CustomEvent("arcgis:auth:hash", { detail: window.location.hash }));
+      }
+      if (target && window.location.search) {
+        target.dispatchEvent(new CustomEvent("arcgis:auth:location:search", { detail: window.location.search }));
+      }
+      window.close();
+    </script>
+  </body>
+</html>
