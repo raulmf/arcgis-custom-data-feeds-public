@@ -23,37 +23,53 @@ The provider must implement source access and data conversion. Query performance
 
 ## Architecture
 
-The diagram separates the deployed request path from the development and packaging workflow. It shows a general CDF architecture; each example implements its own source connection.
+This integration pattern connects an ArcGIS Portal feature layer to an external system through a CDF feature service and a REST API or API manager. An identity provider (IdP) supports OAuth2 authentication for the participating components.
 
 ```mermaid
-flowchart LR
-    clients["ArcGIS clients<br/>Web, desktop, and field apps"]
+flowchart TB
+    idp["Identity provider<br/>IdP"]
 
-    subgraph server["ArcGIS Server"]
-        service["Feature service<br/>FeatureServer REST endpoint"]
-        subgraph runtime["Custom Data Feeds runtime"]
-            provider["Custom data provider<br/>Node.js source access and data conversion"]
+    subgraph arcgis["ARCGIS SYSTEM"]
+        direction TB
+        portal["ARCGIS PORTAL"]
+        layer["CDF Feature Layer"]
+        portal --- layer
+
+        subgraph backend["BACKEND"]
+            direction TB
+            server["ARCGIS SERVER"]
+            service["CDF Feature Service"]
+            server --- service
         end
+
+        layer <-->|"ArcGIS REST requests / responses"| server
     end
 
-    subgraph sources["External data sources"]
-        database["Databricks SQL / Lakebase"]
-        files["Parquet via DuckDB"]
-        api["REST APIs / FIWARE"]
+    subgraph integration["API INTEGRATION"]
+        api["REST API / API MANAGER"]
     end
 
-    clients <-->|"Requests / feature responses"| service
-    service <-->|"Provider operations / results"| provider
-    provider <--> database
-    provider <--> files
-    provider <--> api
+    subgraph external["EXTERNAL SYSTEM TO INTEGRATE"]
+        platform["IoT PLATFORM / ERP<br/>Other external systems"]
+    end
 
-    code["Provider source code"] --> cli["Enterprise SDK: cdf CLI"]
-    cli --> artifact[".cdpk package"]
-    artifact -.->|"Upload and register"| provider
+    portal <-->|"OAuth2"| idp
+    service <-->|"OAuth2"| idp
+    api <-->|"OAuth2"| idp
+    service <-->|"JSON"| api
+    api <-->|"JSON"| platform
+
+    classDef component fill:#00afe3,stroke:#00afe3,color:#fff
+    classDef cdf fill:#00b050,stroke:#00b050,color:#fff
+    class portal,server,idp,api,platform component
+    class layer,service cdf
+    style arcgis fill:#fff,stroke:#00afe3,stroke-width:2px
+    style backend fill:#fff,stroke:#bdbdbd,stroke-width:2px
+    style integration fill:#fff,stroke:#00afe3,stroke-width:2px,stroke-dasharray:6 4
+    style external fill:#fff,stroke:#00afe3,stroke-width:2px
 ```
 
-Feature services are read-only by default. Editing requires a provider that implements it and an appropriately configured service on a supporting ArcGIS Enterprise version. The Databricks example includes a Lakebase editing path; capabilities differ across projects.
+The CDF provider adapts the external API's JSON into features for ArcGIS Server. Portal references the resulting feature service through a feature layer. The IdP connections represent authentication relationships; the exact OAuth2 flow depends on the deployment.
 
 ## Projects in this repository
 
