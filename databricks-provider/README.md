@@ -41,6 +41,24 @@ Setting the service parameter `lakebaseHost` selects Lakebase. Otherwise, the pr
 
 The main provider logic is in [model.js](providers/databricks-geospatial-provider/src/model.js). Its [modules/](providers/databricks-geospatial-provider/src/modules/) directory separates SQL generation, geometry conversion, connection pools, workspace resolution, caching, and audit logging.
 
+### Request processing
+
+`getData(req, callback)` routes requests with `lakebaseHost` to PostgreSQL/PostGIS; other requests go to Databricks SQL. On the SQL path, the model resolves a workspace and warehouse, validates configured identifiers, builds a query, executes it through a reusable connection, and converts rows into a GeoJSON collection with fields, extent, and spatial-reference metadata.
+
+`editData(req, data, callback)` implements adds, updates, and deletes for Lakebase. It uses parameterized edit SQL and can wrap a batch in a transaction when `rollbackOnFailure` is set. The model also supplies `authorize` and `getMetadata` hooks to the CDF runtime.
+
+| Module | Responsibility |
+| --- | --- |
+| [workspaceResolver.js](providers/databricks-geospatial-provider/src/modules/workspaceResolver.js) | INI profile parsing, credential selection, and environment fallback. |
+| [connectionPool.js](providers/databricks-geospatial-provider/src/modules/connectionPool.js) | Databricks SQL pools keyed by workspace alias and warehouse HTTP path. |
+| [geometryFormat.js](providers/databricks-geospatial-provider/src/modules/geometryFormat.js) | Explicit formats, name hints, and schema/sample probes. |
+| [sql.js](providers/databricks-geospatial-provider/src/modules/sql.js) | Lakehouse query construction. |
+| [lakebaseQuery.js](providers/databricks-geospatial-provider/src/modules/lakebaseQuery.js) | PostgreSQL/PostGIS reads. |
+| [editSql.js](providers/databricks-geospatial-provider/src/modules/editSql.js) | Parameterized insert, update, and delete statements. |
+| [queryCache.js](providers/databricks-geospatial-provider/src/modules/queryCache.js) | Optional in-memory response cache with TTL and entry limits. |
+| [auditLog.js](providers/databricks-geospatial-provider/src/modules/auditLog.js) | Optional authentication, query, and edit audit logging. |
+
+
 ## Workspace credentials
 
 Credentials are resolved by [workspaceResolver.js](providers/databricks-geospatial-provider/src/modules/workspaceResolver.js). Configure a named profile in `~/.databrickscfg`, or set `DATABRICKS_CONFIG_FILE` to another file location:
@@ -63,7 +81,11 @@ When `workspace` is omitted, the resolver checks `[DEFAULT]` first, then environ
 | `DATABRICKS_ACCESS_TOKEN` | Token fallback when OAuth credentials are unavailable |
 | `DATABRICKS_HTTP_PATH` | Default SQL warehouse HTTP path |
 
-The model also loads a local `.env` from `providers/databricks-geospatial-provider/.env`. Keep real credentials out of tracked files. Named profiles are cached in memory, so restart the process after changing the profile file.
+The model also loads a local `.env` from `providers/databricks-geospatial-provider/.env`. Keep real credentials out of tracked files. Named profiles are cached in memory, so restart the process after changing the profile file. A generic [.env.example](providers/databricks-geospatial-provider/.env.example) is included as a starting point.
+
+The provider's `DATABRICKS_CONFIG_FILE` points to an **INI** file. The companion builder uses the same variable name for its own **JSON** configuration; they are separate processes and must not share that setting blindly. A workspace ID selected in the builder must resolve to the corresponding profile on the deployed provider.
+
+Lakebase pools obtain short-lived database credentials through the resolved Databricks workspace, using either PAT or OAuth machine-to-machine authentication for the API calls. Setting `LAKEBASE_PASSWORD` explicitly bypasses credential generation; it does not remove the model's workspace-resolution requirement.
 
 ## Service configuration
 
@@ -86,7 +108,7 @@ This is a service-parameter fragment, not a complete ArcGIS service creation req
 }
 ```
 
-Use a unique identifier column for `idField` and the source geometry's EPSG identifier for `srid`. Supported geometry format settings are `WKT`, `WKT_DECIMAL_COMMA`, `WKB`, `GEOJSON`, and `GEOMETRY`; when omitted, the format is inferred from the column name. Set `timeColumn` when using timestamp filtering.
+Use a unique identifier column for `idField` and the source geometry's EPSG identifier for `srid`. Supported geometry format settings are `WKT`, `WKT_DECIMAL_COMMA`, `WKB`, `GEOJSON`, and `GEOMETRY`; when omitted, the resolver first checks column-name hints, then probes `DESCRIBE TABLE` and samples string geometries. The detected format is cached for the process lifetime. Set it explicitly when the schema or naming is ambiguous. Set `timeColumn` when using timestamp filtering.
 
 ### Lakebase example
 
@@ -111,7 +133,7 @@ Editing also requires the service capabilities to include `Query,Editing`. The L
 
 - `maxRecordCount` controls the maximum features per page; the default is `2000` unless overridden by the environment.
 - `enableGeometryGeneralization`, `minGeneralizationTolerance`, and `maxGeneralizationTolerance` control optional geometry simplification.
-- `queryCacheEnabled` enables in-memory caching of identical Lakehouse query responses. It is disabled by default; the default TTL is `300` seconds and capacity is `500` entries, configurable with `queryCacheTtlSeconds` and `queryCacheMaxEntries`.
+- `queryCacheEnabled` enables in-memory caching of identical Lakehouse query responses. It is disabled by default; the default TTL is `300` seconds and capacity is `500` entries, configurable with `queryCacheTtlSeconds` and `queryCacheMaxEntries`. The model excludes metadata, counts, IDs, distinct-value queries, attribute-only responses, and empty geometry results from this cache.
 
 ## Local development
 
@@ -124,7 +146,19 @@ cd databricks-provider/providers/databricks-geospatial-provider
 npm ci
 ```
 
-To start the full local application, install dependencies in `databricks-provider`, the provider, and each package under `framework/` first. Then run from `databricks-provider`:
+To install the local application's separate packages, run from `databricks-provider`:
+
+```powershell
+npm install
+npm install --prefix providers/databricks-geospatial-provider
+Get-ChildItem framework -Directory | ForEach-Object {
+    if (Test-Path (Join-Path $_.FullName 'package.json')) {
+        npm install --prefix $_.FullName
+    }
+}
+```
+
+Then start the application from the same folder:
 
 ```powershell
 npm start
@@ -148,7 +182,9 @@ Some tests require `proxyquire`, which is currently missing from the provider's 
 npm install --no-save --package-lock=false proxyquire
 ```
 
-The application's root `npm test` targets `test/**/*.test.js`, while its checked-in application tests are under `src/*.spec.js`. The provider's `test-local.js` is a separate live-data example with placeholder table settings; it also uses an older promise-style call, while the current `getData` method expects a callback. Adapt it before using it as an integration check.
+The application's root `npm test` targets `test/**/*.test.js`, while its checked-in application tests are under `src/*.spec.js`. The provider's `test-local.js` is a separate live-data example with placeholder table settings; it also uses an older promise-style call, while the current `getData` method expects a callback. It also calls `model.close()`, which the current model does not implement. Adapt it before using it as an integration check.
+
+This README was checked against the application entry point, provider model, manifests, credential resolver, pooling, geometry, caching, and editing modules. No live Databricks, Lakebase, or ArcGIS service was contacted for this documentation update, and the test suite was not run.
 
 ## Related material
 

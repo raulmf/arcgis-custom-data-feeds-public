@@ -77,24 +77,11 @@ The CDF provider adapts the external API's JSON into features for ArcGIS Server.
 | --- | --- |
 | [Databricks provider](databricks-provider/README.md) | Connects feature services to Databricks SQL for analytical queries and Lakebase for editable data. |
 | [Databricks builder](databricks-builder/README.md) | Companion app for browsing metadata, configuring spatial fields, and publishing services using a separately deployed provider. |
-| [DuckDB binning](duckdb-binning/) | Explores spatial binning over Parquet data using DuckDB. |
-| [DuckDB points](duckdb-points-cu2025/) | Point-data example using taxi trip data. |
-| [DuckDB honeycombs](duckdb-honeycombs-cu2025/) | Hexagonal aggregation example for taxi trip data. |
-| [DuckDB origin-destination](duckdb-od-cu2025/) | Origin-destination example for taxi trips. |
-| [FIWARE](fiware-app/) and [dynamic FIWARE](fiware-app-dynamic/) | Provider experiments that fetch entities from an Orion context broker API. |
-| [Open Location Codes scaffold](openlocationcodes/) | Starter provider structure; its current model returns an empty feature collection. |
-
-These are separate examples with different ArcGIS version targets, rather than one application to install from the repository root. Check each project's `cdconfig.json`, configuration, and documentation before running it.
-
-## Development and deployment
-
-1. Choose an example and identify its target ArcGIS Enterprise version.
-2. Set up a compatible Node.js environment and the Enterprise SDK's CDF CLI. Follow Esri's [installation and configuration guide](https://developers.arcgis.com/enterprise-sdk/guide/custom-data-feeds/installing-and-configuring-custom-data-feeds/) for development and server runtime requirements.
-3. Configure your source connection and implement or adapt the provider. Keep credentials in local environment variables or untracked configuration. See [Create a Custom Data Feed Provider](https://developers.arcgis.com/enterprise-sdk/guide/custom-data-feeds/create-a-custom-data-feed-provider/).
-4. Test locally, then package the provider as a `.cdpk` with the CDF CLI. Inspect the package before sharing it to ensure it contains no credentials or private datasets.
-5. [Register the provider with ArcGIS Server](https://developers.arcgis.com/enterprise-sdk/guide/custom-data-feeds/register-a-custom-data-provider/) and create a feature service that references it.
-
-Use the documentation for your deployed version. Checked-in packages are snapshots and do not automatically reflect later source changes.
+| [DuckDB binning](duckdb-binning/README.md) | Queries Parquet taxi points with DuckDB; the current example does not implement bin aggregation. |
+| [DuckDB points](duckdb-points-cu2025/README.md) | Point-data example using taxi trip data. |
+| [DuckDB honeycombs](duckdb-honeycombs-cu2025/README.md) | Hexagonal aggregation example for taxi trip data. |
+| [DuckDB origin-destination](duckdb-od-cu2025/README.md) | Origin-destination example for taxi trips. |
+| [FIWARE](fiware-app/README.md) and [dynamic FIWARE](fiware-app-dynamic/README.md) | Provider experiments that fetch entities from an Orion context broker API. |
 
 ## Background and credits
 

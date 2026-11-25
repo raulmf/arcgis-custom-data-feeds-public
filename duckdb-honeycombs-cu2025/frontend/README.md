@@ -1,4 +1,17 @@
-# Frontend
-This is a simple html file that uses the ArcGIS JS API to render a web map in the browser. We can point the web map to a featureserver (in this case we point it to a localhost url of our cdf app running locally). In future CDF/EnterpriseSDK versions, https will be supported so a CDF running locally can be pulled directly into a AGOL webmap (and thus this html file will no longer be required)
+# DuckDB H3 taxi honeycombs: browser example
 
-If you want to use ArcGIS Pro instead of a web map you can add the 127.0.0.1 feature server url as a data path. The only downside with this is you don't get access to the chrome dev tools to be able to inspect requests going to your server.
+Uses a polygon color ramp on `point_count` and passes `taxi_id` and `h3res` as custom request parameters. Its current scale watcher always selects resolution 9 after starting at 8.
+
+## Run
+
+Start the CDF application as described in the [project README](../README.md). From this `frontend` folder, serve the static page with Python:
+
+```powershell
+python -m http.server 5500 --bind 127.0.0.1
+```
+
+Open `http://127.0.0.1:5500`. No frontend build or npm install is required. Internet access is needed for the ArcGIS JavaScript 4.30 CDN and basemap resources.
+
+The layer URL in [index.html](index.html) is `http://127.0.0.1:8081/duckdb-provider-honeycombs-cu2025/rest/services/localParquet/FeatureServer/0`. Update it if the backend host, port, or provider route changes. A local HTTP backend should be tested from an HTTP page rather than an HTTPS page that would block mixed content.
+
+For schema, configuration, and implementation limits, see the [project README](../README.md).
